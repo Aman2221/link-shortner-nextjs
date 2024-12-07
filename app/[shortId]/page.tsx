@@ -1,36 +1,45 @@
-import { Metadata } from "next";
 import { notFound } from "next/navigation";
-
-// Simulated database storage (replace with Firebase, Supabase, or MongoDB in production)
-const database = new Map<string, string>();
+import { Metadata } from "next";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/index";
 
 interface PageProps {
-  params: { shortId: string };
+  params: { shortId: string }; // Explicitly define the params type
 }
 
+// Generate metadata dynamically based on the shortId
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { shortId } = params;
-  const longUrl = database.get(shortId);
+  const docRef = doc(db, "urls", shortId);
+  const docSnap = await getDoc(docRef);
 
   return {
-    title: longUrl ? "Redirecting..." : "Not Found",
+    title: docSnap.exists() ? "Redirecting..." : "Not Found",
   };
 }
 
-export default function RedirectPage({ params }: PageProps) {
+export default async function RedirectPage({ params }: PageProps) {
   const { shortId } = params;
 
-  const longUrl = database.get(shortId);
+  // Fetch the corresponding long URL from Firestore
+  const docRef = doc(db, "urls", shortId);
+  const docSnap = await getDoc(docRef);
 
-  if (!longUrl) {
-    notFound(); // Return 404 if the shortId is not found
+  if (!docSnap.exists()) {
+    notFound(); // Redirect to a 404 page if the shortId is not found
   }
 
-  if (typeof window !== "undefined") {
-    window.location.href = longUrl;
+  const longUrl = docSnap.data()?.longUrl;
+
+  if (typeof window !== "undefined" && longUrl) {
+    window.location.href = longUrl; // Redirect to the long URL
   }
 
-  return <p>Redirecting to {longUrl}...</p>;
+  return (
+    <div>
+      <p>Redirecting to {longUrl}...</p>
+    </div>
+  );
 }
