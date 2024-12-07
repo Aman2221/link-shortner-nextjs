@@ -8,9 +8,9 @@ const HomePage = () => {
   const [shortID, setShortID] = useState<string>("");
   const generateShortId = () => uuidv4().slice(0, 6);
 
-  const handleInputChange = (e: FormEvent<HTMLInputElement>) => {
-    const target: any = e.target;
-    setLongURL(target.value as string);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputTarget = e.target;
+    setLongURL(inputTarget.value);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
